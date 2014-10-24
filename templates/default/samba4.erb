@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# samba4        This shell script takes care of starting and stopping
+#               samba4 daemons.
+#
+# chkconfig: - 58 74
+# description: Samba 4.0 will be the next version of the Samba suite
+# and incorporates all the technology found in both the Samba4 alpha
+# series and the stable 3.x series. The primary additional features
+# over Samba 3.6 are support for the Active Directory logon protocols
+# used by Windows 2000 and above.
+
+### BEGIN INIT INFO
+# Provides: samba4
+# Required-Start: $network $local_fs $remote_fs
+# Required-Stop: $network $local_fs $remote_fs
+# Should-Start: $syslog $named
+# Should-Stop: $syslog $named
+# Short-Description: start and stop samba4
+# Description: Samba 4.0 will be the next version of the Samba suite
+# and incorporates all the technology found in both the Samba4 alpha
+# series and the stable 3.x series. The primary additional features
+# over Samba 3.6 are support for the Active Directory logon protocols
+# used by Windows 2000 and above.
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+
+prog=samba
+prog_dir=/usr/local/samba/sbin/
+lockfile=/var/lock/subsys/$prog
+
+
+start() {
+        [ "$NETWORKING" = "no" ] && exit 1
+#       [ -x /usr/sbin/ntpd ] || exit 5
+
+                # Start daemons.
+                echo -n $"Starting samba4: "
+                daemon $prog_dir/$prog -D
+        RETVAL=$?
+                echo
+        [ $RETVAL -eq 0 ] && touch $lockfile
+        return $RETVAL
+}
+
+
+stop() {
+        [ "$EUID" != "0" ] && exit 4
+                echo -n $"Shutting down samba4: "
+        killproc $prog_dir/$prog
+        RETVAL=$?
+                echo
+        [ $RETVAL -eq 0 ] && rm -f $lockfile
+        return $RETVAL
+}
+
+
+# See how we were called.
+case "$1" in
+start)
+        start
+        ;;
+stop)
+        stop
+        ;;
+status)
+        status $prog
+        ;;
+restart)
+        stop
+        start
+        ;;
+reload)
+        echo "Not implemented yet."
+        exit 3
+        ;;
+*)
+        echo $"Usage: $0 {start|stop|status|restart|reload}"
+        exit 2
+esac
+
